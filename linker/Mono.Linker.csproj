@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
+  <!--
+      TODO: Remove this workaround once supported.
+
+      The configuration isn't correctly set when the linker is
+      restored as a P2P reference due to a nuget bug
+      (https://github.com/NuGet/Home/issues/4873). As a workaround, we
+      check NuGetRestoreTargets, which is set by the .NET Core restore
+      targets.
+  -->
+  <PropertyGroup>
+    <ILLinkBuild Condition=" $(Configuration.StartsWith('illink')) Or '$(NuGetRestoreTargets)' != '' ">true</ILLinkBuild>
+    <ILLinkBuild Condition=" '$(ILLinkBuild)' == '' ">false</ILLinkBuild>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <Import Project="ILLink.props" Condition=" $(ILLinkBuild) " />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DD28E2B1-057B-4B4D-A04D-B2EBD9E76E46}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Mono.Linker</RootNamespace>
+    <AssemblyName Condition=" ! $(ILLinkBuild) ">monolinker</AssemblyName>
+    <AssemblyName Condition=" $(ILLinkBuild) ">illink</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" Condition=" ! $(ILLinkBuild) " />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup Condition=" ! $(ILLinkBuild) ">
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Mono.Linker.Steps\BaseStep.cs" />
+    <Compile Include="Mono.Linker.Steps\BlacklistStep.cs" />
+    <Compile Include="Mono.Linker.Steps\CleanStep.cs" />
+    <Compile Include="Mono.Linker.Steps\RegenerateGuidStep.cs" />
+    <Compile Include="Mono.Linker.Steps\LoadI18nAssemblies.cs" />
+    <Compile Include="Mono.Linker\IXApiVisitor.cs" />
+    <Compile Include="Mono.Linker\I18nAssemblies.cs" />
+    <Compile Include="Mono.Linker.Steps\IStep.cs" />
+    <Compile Include="Mono.Linker.Steps\LoadReferencesStep.cs" />
+    <Compile Include="Mono.Linker.Steps\MarkStep.cs" />
+    <Compile Include="Mono.Linker.Steps\OutputStep.cs" />
+    <Compile Include="Mono.Linker.Steps\ResolveFromXApiStep.cs" />
+    <Compile Include="Mono.Linker.Steps\ResolveFromAssemblyStep.cs" />
+    <Compile Include="Mono.Linker.Steps\ResolveFromXmlStep.cs" />
+    <Compile Include="Mono.Linker.Steps\ResolveStep.cs" />
+    <Compile Include="Mono.Linker.Steps\SweepStep.cs" />
+    <Compile Include="Mono.Linker\Annotations.cs" />
+    <Compile Include="Mono.Linker\AssemblyAction.cs" />
+    <Compile Include="Mono.Linker\AssemblyInfo.cs" />
+    <Compile Include="Mono.Linker\AssemblyResolver.cs" />
+    <Compile Include="Mono.Linker\DirectoryAssemblyResolver.cs" />
+    <Compile Include="Mono.Linker\Driver.cs" />
+    <Compile Include="Mono.Linker\LinkContext.cs" />
+    <Compile Include="Mono.Linker\LoadException.cs" />
+    <Compile Include="Mono.Linker\MarkException.cs" />
+    <Compile Include="Mono.Linker\MethodAction.cs" />
+    <Compile Include="Mono.Linker\MethodReferenceExtensions.cs" />
+    <Compile Include="Mono.Linker\Pipeline.cs" />
+    <Compile Include="Mono.Linker\TypePreserve.cs" />
+    <Compile Include="Mono.Linker\TypeReferenceExtensions.cs" />
+    <Compile Include="Mono.Linker\XApiReader.cs" />
+    <Compile Include="Mono.Linker.Steps\TypeMapStep.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="README" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\cecil\Mono.Cecil.csproj">
+      <SetConfiguration Condition=" '$(Configuration)' == 'illink_Debug' ">Configuration=netstandard_Debug</SetConfiguration>
+      <SetConfiguration Condition=" '$(Configuration)' == 'illink_Release' ">Configuration=netstandard_Release</SetConfiguration>
+      <Project>{D68133BD-1E63-496E-9EDE-4FBDBF77B486}</Project>
+      <Name>Mono.Cecil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\cecil\symbols\pdb\Mono.Cecil.Pdb.csproj">
+      <SetConfiguration Condition=" '$(Configuration)' == 'illink_Debug' ">Configuration=netstandard_Debug</SetConfiguration>
+      <SetConfiguration Condition=" '$(Configuration)' == 'illink_Release' ">Configuration=netstandard_Release</SetConfiguration>
+      <Project>{63E6915C-7EA4-4D76-AB28-0D7191EEA626}</Project>
+      <Name>Mono.Cecil.Pdb</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
